@@ -36,6 +36,7 @@ def manhattan(rating1, rating2):
 
 
 
+#pearson距离
 def pearson(rating1, rating2):
     sum_xy = 0
     sum_x = 0
@@ -58,6 +59,7 @@ def pearson(rating1, rating2):
     if denominator == 0:
         return 0
     else:
+        #分子经过化简
         return (sum_xy - (sum_x * sum_y) / n) / denominator
             
 
