@@ -1,4 +1,5 @@
-import codecs 
+#coding=utf8
+import codecs
 from math import sqrt
 
 users = {"Angelica": {"Blues Traveler": 3.5, "Broken Bells": 2.0,
@@ -49,6 +50,8 @@ class recommender:
         k is the k value for k nearest neighbor
         metric is which distance formula to use
         n is the maximum number of recommendations to make"""
+        #k最近邻居的个数
+        #n推荐个数
         self.k = k
         self.n = n
         self.username2id = {}
@@ -98,26 +101,32 @@ class recommender:
         #
         # First load book ratings into self.data
         #
-        f = codecs.open(path + "BX-Book-Ratings.csv", 'r', 'utf8')
+        f = codecs.open(path + "BX-Book-Ratings.csv", 'r')
         for line in f:
             i += 1
+            if(i == 1):
+                continue
             #separate line into fields
             fields = line.split(';')
             user = fields[0].strip('"')
             book = fields[1].strip('"')
             rating = int(fields[2].strip().strip('"'))
             if user in self.data:
+                #currentRatings是一个字典,如果已经存在,则取出来,在后面进行添加kv
                 currentRatings = self.data[user]
             else:
                 currentRatings = {}
+            #给字典添加kv
             currentRatings[book] = rating
+            #data[user] = {book->rating}
             self.data[user] = currentRatings
         f.close()
+        # print self.data
         #
         # Now load books into self.productid2name
         # Books contains isbn, title, and author among other fields
         #
-        f = codecs.open(path + "../BX-Books.csv", 'r', 'utf8')
+        f = codecs.open(path + "BX-Books.csv", 'r')
         for line in f:
             i += 1
             #separate line into fields
@@ -132,7 +141,7 @@ class recommender:
         #  Now load user info into both self.userid2name and
         #  self.username2id
         #
-        f = codecs.open(path + "BX-Users.csv", 'r', 'utf8')
+        f = codecs.open(path + "BX-Users.csv", 'r')
         for line in f:
             i += 1
             #print(line)
@@ -151,7 +160,7 @@ class recommender:
             self.userid2name[userid] = value
             self.username2id[location] = userid
         f.close()
-        print(i)
+        #print(i)
                 
         
     def pearson(self, rating1, rating2):
@@ -161,6 +170,7 @@ class recommender:
         sum_x2 = 0
         sum_y2 = 0
         n = 0
+        #针对两个用户都评价过的书
         for key in rating1:
             if key in rating2:
                 n += 1
@@ -171,20 +181,25 @@ class recommender:
                 sum_y += y
                 sum_x2 += pow(x, 2)
                 sum_y2 += pow(y, 2)
+        #这里有问题,如果两个用户都没交集,那么距离是0,然后被认为是很接近的,显然错误
+        #返回字典长度
         if n == 0:
-            return 0
+            return len(rating1)
         # now compute denominator
         denominator = (sqrt(sum_x2 - pow(sum_x, 2) / n)
                        * sqrt(sum_y2 - pow(sum_y, 2) / n))
         if denominator == 0:
             return 0
         else:
+            #计算pearson距离
             return (sum_xy - (sum_x * sum_y) / n) / denominator
 
 
     def computeNearestNeighbor(self, username):
         """creates a sorted list of users based on their distance to
-        username"""
+        username
+        计算其它用户和当前用户的距离
+        """
         distances = []
         for instance in self.data:
             if instance != username:
@@ -224,6 +239,7 @@ class recommender:
           for artist in neighborRatings:
              if not artist in userRatings:
                 if artist not in recommendations:
+                   #根据权重将要推荐的值计算
                    recommendations[artist] = (neighborRatings[artist]
                                               * weight)
                 else:
@@ -238,5 +254,11 @@ class recommender:
        recommendations.sort(key=lambda artistTuple: artistTuple[1],
                             reverse = True)
        # Return the first n items
+       #计算出要推荐的值,排序取前面的
        return recommendations[:self.n]
+
+if __name__ == "__main__":
+    recom = recommender(data=None,k=100,n=3)
+    recom.loadBookDB(path="./")
+    print recom.recommend("131402")
 
